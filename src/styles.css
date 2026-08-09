@@ -227,13 +227,11 @@ body {
 }
 
 .shared-runtime-frame {
-  width: 100%;
-  min-height: 100%;
-}
-
-.shared-runtime-frame {
+  align-self: stretch;
   display: block;
-  height: 100%;
+  width: 100%;
+  height: auto;
+  min-height: 0;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 14px;
   background: white;
