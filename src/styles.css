@@ -13,13 +13,8 @@ body,
 
 body {
   font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "PingFang SC",
-    "Hiragino Sans GB",
-    "Noto Sans CJK SC",
-    "Microsoft YaHei",
-    sans-serif;
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
   background: #0e0f12;
   color: #e8e9ec;
   -webkit-font-smoothing: antialiased;
@@ -127,6 +122,294 @@ body {
   overflow: hidden;
 }
 
+.share-shell {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  background: #0b0d12;
+}
+
+.share-header {
+  display: grid;
+  grid-template-columns: minmax(150px, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 58px;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(15, 17, 23, 0.96);
+}
+
+.share-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f2f4f8;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.share-brand-mark {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #a78bfa, #6d28d9);
+  color: white;
+  font-size: 13px;
+}
+
+.share-title {
+  overflow: hidden;
+  color: #c8cdd7;
+  font-size: 13px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-badge {
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(124, 58, 237, 0.12);
+  color: #b9a2ff;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.share-stage {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  padding: 16px;
+}
+
+.share-footer {
+  padding: 0 20px 14px;
+  color: #686f7c;
+  font-size: 10px;
+  text-align: center;
+}
+
+.share-state {
+  display: flex;
+  width: min(460px, calc(100% - 40px));
+  min-height: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto;
+  color: #9aa0ab;
+  font-size: 13px;
+}
+
+.share-state-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  animation: share-pulse 1s ease-in-out infinite alternate;
+}
+
+.share-state-error {
+  flex-direction: column;
+  text-align: center;
+}
+
+.share-state-error strong {
+  color: #f2f4f8;
+  font-size: 16px;
+}
+
+.shared-runtime-frame {
+  width: 100%;
+  min-height: 100%;
+}
+
+.shared-runtime-frame {
+  display: block;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 22px 64px rgba(0, 0, 0, 0.32);
+}
+
+.shared-url-stage {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 20%, #1c1730, #0b0d12 58%);
+}
+
+.shared-url-card {
+  display: flex;
+  width: min(420px, 100%);
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(21, 24, 32, 0.92);
+}
+
+.shared-url-kicker {
+  color: #a78bfa;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.shared-url-card strong {
+  color: #f2f4f8;
+  font-size: 20px;
+}
+
+.shared-url-card p {
+  color: #8b93a1;
+  font-size: 13px;
+}
+
+.shared-url-card a,
+.a2ui-stage button,
+.a2ui-form button {
+  align-self: flex-start;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 14px;
+  background: #7c3aed;
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.a2ui-stage {
+  width: 100%;
+  min-height: 100%;
+  padding: 24px;
+  background: #0f1117;
+  color: #dfe3eb;
+  line-height: 1.55;
+}
+
+.a2ui-stage > * + * {
+  margin-top: 12px;
+}
+
+.a2ui-stage h2 {
+  color: #f4f5f8;
+  font-size: 20px;
+}
+
+.a2ui-stage p,
+.a2ui-stage li {
+  color: #abb2bf;
+  font-size: 14px;
+}
+
+.a2ui-stage pre,
+.a2ui-form {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: #151821;
+}
+
+.a2ui-local-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.a2ui-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: #151821;
+}
+
+.a2ui-html-frame {
+  width: 100%;
+  min-height: 120px;
+  border: 0;
+  background: transparent;
+}
+
+.a2ui-stage img {
+  max-width: 100%;
+}
+
+.a2ui-table-wrap {
+  overflow-x: auto;
+}
+
+.a2ui-stage table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.a2ui-stage th,
+.a2ui-stage td {
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #abb2bf;
+  font-size: 12px;
+  text-align: left;
+}
+
+.a2ui-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.a2ui-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #c5cad3;
+  font-size: 12px;
+}
+
+.a2ui-form input,
+.a2ui-form select {
+  min-height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  padding: 6px 9px;
+  background: #0d1016;
+  color: #f2f4f8;
+}
+
+.a2ui-local-note {
+  color: #777f8d;
+  font-size: 11px;
+}
+
+@keyframes share-pulse {
+  from {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 640px) {
   .shell-header {
     gap: 10px;
@@ -136,6 +419,34 @@ body {
   .shell-title-en,
   .shell-tab-sub,
   .shell-source {
+    display: none;
+  }
+
+  .share-header {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    padding: 9px 12px;
+  }
+
+  .share-brand > span:last-child,
+  .share-badge {
+    display: none;
+  }
+
+  .share-title {
+    text-align: left;
+  }
+
+  .share-stage {
+    padding: 0;
+  }
+
+  .shared-runtime-frame {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .share-footer {
     display: none;
   }
 }

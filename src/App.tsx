@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
+
 import FlowField from "./variants/FlowField";
-import SketchBoard from "./variants/SketchBoard";
 import PhysicsBox from "./variants/PhysicsBox";
+import SketchBoard from "./variants/SketchBoard";
+
+const SharedCanvasPage = lazy(() => import("./SharedCanvasPage"));
 
 type VariantDef = {
   id: string;
@@ -16,22 +19,25 @@ const VARIANTS: VariantDef[] = [
   { id: "physics", label: "弹珠", sub: "Physics Toy", Component: PhysicsBox },
 ];
 
-function variantFromHash(): string {
-  const id = window.location.hash.replace(/^#\/?/, "");
-  return VARIANTS.some((v) => v.id === id) ? id : VARIANTS[0].id;
+type Route =
+  | { kind: "gallery"; variantId: string }
+  | { kind: "share"; hash: string };
+
+function routeFromHash(): Route {
+  const hash = window.location.hash;
+  if (hash.startsWith("#/share/g1/")) return { kind: "share", hash };
+  const id = hash.replace(/^#\/?/, "");
+  return {
+    kind: "gallery",
+    variantId: VARIANTS.some((variant) => variant.id === id)
+      ? id
+      : VARIANTS[0].id,
+  };
 }
 
-export default function App() {
-  const [active, setActive] = useState<string>(variantFromHash);
-
-  // 与浏览器 URL hash 同步：分享 #/sketch 之类的链接可直达对应画布
-  useEffect(() => {
-    const onHashChange = () => setActive(variantFromHash());
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  const current = VARIANTS.find((v) => v.id === active) ?? VARIANTS[0];
+function Gallery({ active }: { active: string }) {
+  const current =
+    VARIANTS.find((variant) => variant.id === active) ?? VARIANTS[0];
   const Active = current.Component;
 
   return (
@@ -42,17 +48,17 @@ export default function App() {
           <span className="shell-title-en">Canvas Gallery</span>
         </div>
         <nav className="shell-tabs" aria-label="画布切换">
-          {VARIANTS.map((v) => (
+          {VARIANTS.map((variant) => (
             <button
-              key={v.id}
+              key={variant.id}
               type="button"
-              className={`shell-tab${v.id === current.id ? " is-active" : ""}`}
+              className={`shell-tab${variant.id === current.id ? "is-active" : ""}`}
               onClick={() => {
-                window.location.hash = `/${v.id}`;
+                window.location.hash = `/${variant.id}`;
               }}
             >
-              {v.label}
-              <span className="shell-tab-sub">{v.sub}</span>
+              {variant.label}
+              <span className="shell-tab-sub">{variant.sub}</span>
             </button>
           ))}
         </nav>
@@ -65,10 +71,30 @@ export default function App() {
           源码
         </a>
       </header>
-      {/* key 强制切换时完全卸载旧画布，保证 rAF/监听器干净回收 */}
       <main className="shell-stage" key={current.id}>
         <Active />
       </main>
     </div>
   );
+}
+
+export default function App() {
+  const [route, setRoute] = useState<Route>(routeFromHash);
+
+  // Browser location is the external navigation source for both gallery and
+  // self-contained Canvas links; cleanup keeps Strict Mode remounts safe.
+  useEffect(() => {
+    const onHashChange = () => setRoute(routeFromHash());
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  if (route.kind === "share") {
+    return (
+      <Suspense fallback={<div className="share-state">Opening Canvas…</div>}>
+        <SharedCanvasPage hash={route.hash} />
+      </Suspense>
+    );
+  }
+  return <Gallery active={route.variantId} />;
 }
