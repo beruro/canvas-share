@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   CANVAS_SHARE_HASH_PREFIX,
+  CANVAS_SHARE_SHORT_HASH_PREFIX,
   decodeCanvasShareHash,
 } from "./shareProtocol";
 
@@ -23,6 +24,8 @@ async function encodeFixture(value: unknown): Promise<string> {
 }
 
 describe("public Canvas viewer protocol", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
   it("decodes a versioned Canvas-only envelope", async () => {
     const hash = await encodeFixture({
       version: 1,
@@ -85,5 +88,53 @@ describe("public Canvas viewer protocol", () => {
     await expect(decodeCanvasShareHash(hash)).rejects.toThrow(
       "unsupported data"
     );
+  });
+
+  it("loads and validates a hosted snapshot from a compact share route", async () => {
+    const embeddedHash = await encodeFixture({
+      version: 1,
+      canvas: {
+        mode: "html",
+        title: "Hosted",
+        content: "<button>Open</button>",
+      },
+    });
+    const payload = embeddedHash.slice(CANVAS_SHARE_HASH_PREFIX.length);
+    const fetchSpy = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ payload }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await expect(
+      decodeCanvasShareHash(
+        `${CANVAS_SHARE_SHORT_HASH_PREFIX}abcdefghijklmnopqrstuv`,
+        undefined,
+        "https://api.example.test/canvas-shares"
+      )
+    ).resolves.toMatchObject({
+      canvas: { title: "Hosted", content: "<button>Open</button>" },
+    });
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://api.example.test/canvas-shares/abcdefghijklmnopqrstuv",
+      expect.objectContaining({ headers: { accept: "application/json" } })
+    );
+  });
+
+  it("reports an expired or missing short link without decoding", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(null, { status: 404 }))
+    );
+
+    await expect(
+      decodeCanvasShareHash(
+        `${CANVAS_SHARE_SHORT_HASH_PREFIX}abcdefghijklmnopqrstuv`,
+        undefined,
+        "https://api.example.test/canvas-shares"
+      )
+    ).rejects.toThrow("expired or does not exist");
   });
 });

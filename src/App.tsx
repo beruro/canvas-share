@@ -25,7 +25,9 @@ type Route =
 
 function routeFromHash(): Route {
   const hash = window.location.hash;
-  if (hash.startsWith("#/share/g1/")) return { kind: "share", hash };
+  if (hash.startsWith("#/share/g1/") || hash.startsWith("#/s/")) {
+    return { kind: "share", hash };
+  }
   const id = hash.replace(/^#\/?/, "");
   return {
     kind: "gallery",
@@ -81,8 +83,8 @@ function Gallery({ active }: { active: string }) {
 export default function App() {
   const [route, setRoute] = useState<Route>(routeFromHash);
 
-  // Browser location is the external navigation source for both gallery and
-  // self-contained Canvas links; cleanup keeps Strict Mode remounts safe.
+  // Browser location is the external navigation source for gallery, embedded,
+  // and hosted Canvas links; cleanup keeps Strict Mode remounts safe.
   useEffect(() => {
     const onHashChange = () => setRoute(routeFromHash());
     window.addEventListener("hashchange", onHashChange);

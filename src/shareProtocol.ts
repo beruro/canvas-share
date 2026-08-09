@@ -1,8 +1,13 @@
 export const CANVAS_SHARE_PROTOCOL_VERSION = 1 as const;
 export const CANVAS_SHARE_HASH_PREFIX = "#/share/g1/";
+export const CANVAS_SHARE_SHORT_HASH_PREFIX = "#/s/";
 const MAX_CANVAS_SHARE_SOURCE_BYTES = 512 * 1024;
+const MAX_CANVAS_SHARE_UPLOAD_CHARACTERS = 768 * 1024;
 const MAX_CANVAS_SHARE_ENVELOPE_BYTES =
   MAX_CANVAS_SHARE_SOURCE_BYTES * 2 + 16 * 1024;
+const DEFAULT_CANVAS_SHARE_API_URL =
+  "https://org2-cloud-infra.vercel.app/api/canvas-shares";
+const CANVAS_SHARE_SHORT_ID_PATTERN = /^[A-Za-z0-9_-]{22}$/;
 
 const CANVAS_SHARE_MODES = new Set(["html", "react", "a2ui", "url"]);
 
@@ -116,18 +121,92 @@ async function gunzip(bytes: Uint8Array): Promise<Uint8Array> {
   return output;
 }
 
-function encodedPayloadFromHash(hash: string): string {
+function embeddedPayloadFromHash(hash: string): string | null {
   if (hash.startsWith(CANVAS_SHARE_HASH_PREFIX)) {
     return hash.slice(CANVAS_SHARE_HASH_PREFIX.length);
   }
-  throw new CanvasShareDecodeError("This is not a Canvas share link.");
+  return null;
+}
+
+function shortIdFromHash(hash: string): string | null {
+  if (!hash.startsWith(CANVAS_SHARE_SHORT_HASH_PREFIX)) return null;
+  const id = hash.slice(CANVAS_SHARE_SHORT_HASH_PREFIX.length);
+  return CANVAS_SHARE_SHORT_ID_PATTERN.test(id) ? id : null;
+}
+
+function resolveApiUrl(apiUrl?: string): string {
+  const configured =
+    apiUrl ??
+    import.meta.env.VITE_CANVAS_SHARE_API_URL ??
+    DEFAULT_CANVAS_SHARE_API_URL;
+  const url = new URL(configured);
+  if (url.protocol !== "https:" && url.hostname !== "localhost") {
+    throw new CanvasShareDecodeError("Canvas share API must use HTTPS.");
+  }
+  url.hash = "";
+  return url.toString().replace(/\/+$/, "");
+}
+
+async function fetchShortPayload(
+  id: string,
+  signal?: AbortSignal,
+  apiUrl?: string
+): Promise<string> {
+  let response: Response;
+  try {
+    response = await fetch(`${resolveApiUrl(apiUrl)}/${id}`, {
+      headers: { accept: "application/json" },
+      signal,
+    });
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    throw new CanvasShareDecodeError(
+      "The Canvas snapshot service is temporarily unavailable."
+    );
+  }
+  if (response.status === 404) {
+    throw new CanvasShareDecodeError(
+      "This Canvas link has expired or does not exist."
+    );
+  }
+  if (!response.ok) {
+    throw new CanvasShareDecodeError(
+      "The Canvas snapshot service is temporarily unavailable."
+    );
+  }
+  const value: unknown = await response.json();
+  if (!value || typeof value !== "object") {
+    throw new CanvasShareDecodeError(
+      "The Canvas snapshot service returned invalid data."
+    );
+  }
+  const payload = (value as Record<string, unknown>).payload;
+  if (
+    typeof payload !== "string" ||
+    payload.length === 0 ||
+    payload.length > MAX_CANVAS_SHARE_UPLOAD_CHARACTERS ||
+    !/^[A-Za-z0-9_-]+$/.test(payload)
+  ) {
+    throw new CanvasShareDecodeError(
+      "The Canvas snapshot service returned invalid data."
+    );
+  }
+  return payload;
 }
 
 export async function decodeCanvasShareHash(
-  hash: string
+  hash: string,
+  signal?: AbortSignal,
+  apiUrl?: string
 ): Promise<CanvasShareEnvelopeV1> {
   try {
-    const encoded = encodedPayloadFromHash(hash);
+    const embedded = embeddedPayloadFromHash(hash);
+    const shortId = shortIdFromHash(hash);
+    if (!embedded && !shortId) {
+      throw new CanvasShareDecodeError("This is not a Canvas share link.");
+    }
+    const encoded =
+      embedded ?? (await fetchShortPayload(shortId!, signal, apiUrl));
     const json = new TextDecoder().decode(
       await gunzip(base64UrlToBytes(encoded))
     );
@@ -140,6 +219,7 @@ export async function decodeCanvasShareHash(
     return value;
   } catch (error) {
     if (error instanceof CanvasShareDecodeError) throw error;
+    if (signal?.aborted) throw error;
     throw new CanvasShareDecodeError(
       "This Canvas link is incomplete or invalid."
     );

@@ -19,8 +19,9 @@ function useDecodedCanvas(hash: string): DecodeState {
   // that completes after the hash changed or this view unmounted.
   useEffect(() => {
     let current = true;
+    const controller = new AbortController();
     setState({ phase: "loading" });
-    void decodeCanvasShareHash(hash).then(
+    void decodeCanvasShareHash(hash, controller.signal).then(
       (envelope) => {
         if (current) setState({ phase: "ready", envelope });
       },
@@ -37,6 +38,7 @@ function useDecodedCanvas(hash: string): DecodeState {
     );
     return () => {
       current = false;
+      controller.abort();
     };
   }, [hash]);
 
