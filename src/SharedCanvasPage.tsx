@@ -113,28 +113,12 @@ export default function SharedCanvasPage({ hash }: { hash: string }) {
   if (state.phase === "loading") return <LoadingState />;
   if (state.phase === "error") return <ErrorState message={state.message} />;
 
-  const title = state.envelope.canvas.title || "Shared Canvas";
   return (
-    <div className="share-shell">
-      <header className="share-header">
-        <div className="share-brand" aria-label="ORGII Canvas">
-          <span className="share-brand-mark" aria-hidden>
-            O
-          </span>
-          <span>ORGII Canvas</span>
-        </div>
-        <div className="share-title" title={title}>
-          {title}
-        </div>
-        <span className="share-badge">Snapshot</span>
-      </header>
-      <main className="share-stage">
-        <CanvasRuntime envelope={state.envelope} />
-      </main>
-      <footer className="share-footer">
-        This link contains one Canvas snapshot. No conversation or repository
-        data is included.
-      </footer>
-    </div>
+    <main
+      className="shared-canvas"
+      aria-label={state.envelope.canvas.title || "Shared Canvas"}
+    >
+      <CanvasRuntime envelope={state.envelope} />
+    </main>
   );
 }
