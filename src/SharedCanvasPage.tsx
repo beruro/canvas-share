@@ -63,17 +63,26 @@ function ErrorState({ message }: { message: string }) {
   );
 }
 
-function SharedHtmlCanvas({ content }: { content: string }) {
+const SHARED_HTML_FRAGMENT_STYLES =
+  "*{box-sizing:border-box}" +
+  "html,body{width:100%;height:100%;min-height:100%;margin:0;font-family:system-ui,-apple-system,sans-serif}" +
+  "body{padding:0;overflow:auto}" +
+  "body>:only-child{min-height:100%;border:0!important;border-radius:0!important;box-shadow:none!important}";
+
+export function buildSharedHtmlDocument(content: string): string {
   const trimmed = content.trimStart().toLowerCase();
-  const document =
-    trimmed.startsWith("<!doctype html") || trimmed.startsWith("<html")
-      ? content
-      : `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,sans-serif}body{padding:16px}</style></head><body>${content}</body></html>`;
+  if (trimmed.startsWith("<!doctype html") || trimmed.startsWith("<html")) {
+    return content;
+  }
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${SHARED_HTML_FRAGMENT_STYLES}</style></head><body>${content}</body></html>`;
+}
+
+export function SharedHtmlCanvas({ content }: { content: string }) {
   return (
     <iframe
       className="shared-runtime-frame"
       title="Shared HTML Canvas"
-      srcDoc={document}
+      srcDoc={buildSharedHtmlDocument(content)}
       sandbox="allow-scripts allow-forms allow-modals allow-popups"
     />
   );
